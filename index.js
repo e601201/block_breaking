@@ -24,6 +24,8 @@ var brickPadding = 10;
 var brickOffsetTop = 30;
 var brickOffsetLeft = 30;
 
+var score = 0;
+var lives = 3;
 var bricks = [];
 for(var c=0; c<brickColumnCount; c++) {
     bricks[c] = [];
@@ -54,6 +56,14 @@ function keyUpHandler(e) {
   }
 }
 
+document.addEventListener("mousemove", mouseMoveHandler, false);
+function mouseMoveHandler(e) {
+  var relativeX = e.clientX - canvas.offsetLeft;
+  if(relativeX > 0 && relativeX < canvas.width) {
+      paddleX = relativeX - paddleWidth/2;
+  }
+}
+
 function collisionDetection() {
   for(var c=0; c<brickColumnCount; c++) {
       for(var r=0; r<brickRowCount; r++) {
@@ -62,10 +72,26 @@ function collisionDetection() {
               if(x > b.x && x < b.x+brickWidth && y > b.y && y < b.y+brickHeight) {
                   dy = -dy;
                   b.status = 0;
+                  score++;
+                  if(score == brickRowCount*brickColumnCount) {
+                    alert("YOU WIN, CONGRATULATIONS!");
+                    document.location.reload();
+                  }
               }
           }
       }
   }
+}
+function drawScore() {
+  ctx.font = "16px Arial";
+  ctx.fillStyle = "#0095DD";
+  ctx.fillText("Score: "+score, 8, 20);
+}
+
+function drawLives() {
+  ctx.font = "16px Arial";
+  ctx.fillStyle = "#0095DD";
+  ctx.fillText("Lives: "+lives, canvas.width-65, 20);
 }
 
 function drawBall(){
@@ -113,6 +139,9 @@ function draw() {
   drawBall();
   
   drawPaddle();
+  drawScore();
+  drawLives();
+
   collisionDetection();
 
   if(x + dx > canvas.width-ballRadius || x + dx < ballRadius) {
@@ -126,8 +155,18 @@ function draw() {
           dy = -dy;
       }
       else {
-          alert("GAME OVER");
-          document.location.reload();
+        lives--;
+        if(!lives) {
+            alert("GAME OVER");
+            document.location.reload();
+        }
+        else {
+            x = canvas.width/2;
+            y = canvas.height-30;
+            dx = 2;
+            dy = -2;
+            paddleX = (canvas.width-paddleWidth)/2;
+        }
           clearInterval(interval); // Needed for Chrome to end game
       }
   }
@@ -141,7 +180,8 @@ function draw() {
   
   x += dx;
   y += dy;
+  requestAnimationFrame(draw);
 }
 
 
-var interval = setInterval(draw, 10);
+var interval = draw();
